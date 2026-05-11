@@ -1,0 +1,12 @@
+sistema/
+.git/
+.gitignore
+*.md
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.env
+app/data/
+notas_output/
+*.log

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Sincronizar — Portal NF-e / CT-e{% endblock %}
+
+{% block content %}
+<h4 class="mb-4 fw-semibold"><i class="bi bi-cloud-download me-2 text-primary"></i>Sincronizar</h4>
+
+{% if not configurado %}
+<div class="alert alert-warning d-flex align-items-start gap-2 mb-4">
+  <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+  <div>
+    <strong>Configuração incompleta.</strong> Complete antes de sincronizar.
+    <ul class="mb-0 mt-1">
+      {% for e in erros_config %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+    <a href="/configuracoes" class="btn btn-sm btn-warning mt-2">Ir para Configurações</a>
+  </div>
+</div>
+{% endif %}
+
+<!-- Botões -->
+<div class="card mb-4">
+  <div class="card-body">
+    <p class="text-muted small mb-3">Selecione o que deseja baixar da SEFAZ-RS:</p>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-outline-success {% if not configurado %}disabled{% endif %}"
+              onclick="iniciarSync('nfe')" id="btn-nfe">
+        <i class="bi bi-receipt me-2"></i>Sincronizar NF-e
+      </button>
+      <button class="btn btn-outline-info {% if not configurado %}disabled{% endif %}"
+              onclick="iniciarSync('cte')" id="btn-cte">
+        <i class="bi bi-truck me-2"></i>Sincronizar CT-e
+      </button>
+      <button class="btn btn-primary {% if not configurado %}disabled{% endif %}"
+              onclick="iniciarSync('tudo')" id="btn-tudo">
+        <i class="bi bi-play-fill me-2"></i>Sincronizar Tudo
+      </button>
+      <button class="btn btn-outline-secondary d-none" id="btn-parar" onclick="pararSync()">
+        <i class="bi bi-stop-fill me-1"></i>Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Terminal de saída -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-semibold"><i class="bi bi-terminal me-2"></i>Saída</span>
+    <div class="d-flex align-items-center gap-2">
+      <span id="status-badge" class="badge bg-secondary">Aguardando</span>
+      <button class="btn btn-sm btn-outline-secondary" onclick="limparTerminal()">
+        <i class="bi bi-trash3"></i>
+      </button>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <pre class="terminal mb-0" id="terminal">Aguardando sincronização...</pre>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let eventSource = null;
+
+const terminal = document.getElementById('terminal');
+const statusBadge = document.getElementById('status-badge');
+const botoes = ['btn-nfe', 'btn-cte', 'btn-tudo'];
+
+function setStatus(texto, cor) {
+  statusBadge.textContent = texto;
+  statusBadge.className = `badge bg-${cor}`;
+}
+
+function escrever(msg, nivel) {
+  const classes = {erro: 'linha-erro', sucesso: 'linha-sucesso', aviso: 'linha-aviso'};
+  const cls = classes[nivel] || '';
+  const linha = document.createElement('span');
+  if (cls) linha.className = cls;
+  linha.textContent = msg + '\n';
+  if (terminal.textContent === 'Aguardando sincronização...') {
+    terminal.textContent = '';
+  }
+  terminal.appendChild(linha);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function setBotoesAtivos(ativo) {
+  botoes.forEach(id => {
+    const b = document.getElementById(id);
+    if (ativo) b.classList.remove('disabled');
+    else b.classList.add('disabled');
+  });
+  document.getElementById('btn-parar').classList.toggle('d-none', ativo);
+}
+
+function iniciarSync(tipo) {
+  if (eventSource) eventSource.close();
+
+  const labels = {nfe: 'NF-e', cte: 'CT-e', tudo: 'Tudo'};
+  setBotoesAtivos(false);
+  setStatus(`Sincronizando ${labels[tipo]}...`, 'warning');
+  escrever(`▶ Iniciando sincronização: ${labels[tipo]}`, null);
+
+  eventSource = new EventSource(`/api/sync/${tipo}/stream`);
+
+  eventSource.onmessage = function(e) {
+    const dados = JSON.parse(e.data);
+    if (!dados.msg && !dados.done) return; // keepalive
+
+    if (dados.msg) escrever(dados.msg, dados.nivel);
+
+    if (dados.done) {
+      eventSource.close();
+      eventSource = null;
+      setBotoesAtivos(true);
+      const cores = {sucesso: 'success', erro: 'danger', aviso: 'warning'};
+      setStatus('Concluído', cores[dados.nivel] || 'secondary');
+    }
+  };
+
+  eventSource.onerror = function() {
+    escrever('Conexão interrompida.', 'erro');
+    setStatus('Erro', 'danger');
+    setBotoesAtivos(true);
+    if (eventSource) { eventSource.close(); eventSource = null; }
+  };
+}
+
+function pararSync() {
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  setBotoesAtivos(true);
+  setStatus('Cancelado', 'secondary');
+  escrever('⏹ Cancelado pelo usuário.', 'aviso');
+}
+
+function limparTerminal() {
+  terminal.textContent = 'Aguardando sincronização...';
+  setStatus('Aguardando', 'secondary');
+}
+</script>
+{% endblock %}

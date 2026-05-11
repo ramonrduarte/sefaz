@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Configurações — Portal NF-e / CT-e{% endblock %}
+
+{% block content %}
+<h4 class="mb-4 fw-semibold"><i class="bi bi-gear me-2 text-primary"></i>Configurações</h4>
+
+{% if msg_ok %}
+<div class="alert alert-success d-flex align-items-center gap-2">
+  <i class="bi bi-check-circle-fill"></i> {{ msg_ok }}
+</div>
+{% endif %}
+{% if msg_erro %}
+<div class="alert alert-danger d-flex align-items-center gap-2">
+  <i class="bi bi-x-circle-fill"></i> {{ msg_erro }}
+</div>
+{% endif %}
+
+<form method="post" action="/configuracoes">
+  <div class="card mb-4">
+    <div class="card-header fw-semibold">Dados da Empresa</div>
+    <div class="card-body">
+
+      <div class="mb-3">
+        <label class="form-label">CNPJ <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" name="cnpj"
+               value="{{ config.cnpj }}" placeholder="14 dígitos, sem pontos ou barras"
+               maxlength="18" required>
+        <div class="form-text">Informe apenas os números (14 dígitos).</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Pasta de destino dos XMLs <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" name="pasta_destino"
+               value="{{ config.pasta_destino }}" placeholder="/notas"
+               required>
+        <div class="form-text">
+          Caminho <strong>dentro do container</strong>. Monte sua pasta de rede neste caminho via Docker volume.
+          Padrão: <code>/notas</code>
+        </div>
+      </div>
+
+      <div class="mb-0">
+        <label class="form-label">Ambiente</label>
+        <div class="d-flex gap-4">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="ambiente" id="amb1" value="1"
+                   {% if config.ambiente == 1 %}checked{% endif %}>
+            <label class="form-check-label" for="amb1">
+              <span class="badge bg-success me-1">Produção</span>
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="ambiente" id="amb2" value="2"
+                   {% if config.ambiente == 2 %}checked{% endif %}>
+            <label class="form-check-label" for="amb2">
+              <span class="badge bg-secondary me-1">Homologação</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Endpoints avançados -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Endpoints do Web Service</span>
+      <button type="button" class="btn btn-sm btn-outline-secondary"
+              data-bs-toggle="collapse" data-bs-target="#collapseEndpoints">
+        <i class="bi bi-chevron-down"></i> Avançado
+      </button>
+    </div>
+    <div class="collapse" id="collapseEndpoints">
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          Confirme as URLs nos boletins técnicos:<br>
+          <em>NFe_BT_RS2014_001</em> e <em>CTe_BT_RS2015_001</em> da SEFAZ-RS.
+        </p>
+
+        {% for campo, label in [
+            ("nfe_producao",   "NF-e — Produção"),
+            ("nfe_homologacao","NF-e — Homologação"),
+            ("cte_producao",   "CT-e — Produção"),
+            ("cte_homologacao","CT-e — Homologação")
+        ] %}
+        <div class="mb-3">
+          <label class="form-label small text-muted">{{ label }}</label>
+          <input type="url" class="form-control form-control-sm font-monospace"
+                 name="{{ campo }}" value="{{ config.endpoints[campo] }}">
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">
+    <i class="bi bi-floppy me-2"></i>Salvar Configurações
+  </button>
+  <a href="/" class="btn btn-outline-secondary ms-2">Cancelar</a>
+</form>
+
+<!-- Reset NSU -->
+<div class="card mt-4 border-warning">
+  <div class="card-header text-warning fw-semibold">
+    <i class="bi bi-arrow-counterclockwise me-2"></i>Resetar NSU
+  </div>
+  <div class="card-body">
+    <p class="small text-muted mb-3">
+      Reseta o número sequencial, fazendo o sistema baixar <strong>todos</strong> os documentos novamente desde o início.
+      Use apenas para recriar os arquivos XML.
+    </p>
+    <div class="d-flex gap-2 flex-wrap">
+      <button class="btn btn-sm btn-outline-warning" onclick="resetarNSU('nfe')">
+        Resetar NSU NF-e
+      </button>
+      <button class="btn btn-sm btn-outline-warning" onclick="resetarNSU('cte')">
+        Resetar NSU CT-e
+      </button>
+      <button class="btn btn-sm btn-warning" onclick="resetarNSU('tudo')">
+        Resetar Tudo
+      </button>
+    </div>
+    <div id="msg-reset" class="mt-2 small"></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function resetarNSU(tipo) {
+  const labels = {nfe: 'NF-e', cte: 'CT-e', tudo: 'NF-e e CT-e'};
+  if (!confirm(`Resetar NSU de ${labels[tipo]}? Isso causará redownload de todos os documentos.`)) return;
+  const r = await fetch(`/api/nsu/reset/${tipo}`, {method: 'POST'});
+  const d = await r.json();
+  document.getElementById('msg-reset').innerHTML =
+    d.ok ? `<span class="text-success">✓ NSU resetado para ${labels[tipo]}.</span>`
+         : `<span class="text-danger">Erro: ${d.erro}</span>`;
+}
+</script>
+{% endblock %}

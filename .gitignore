@@ -1,0 +1,31 @@
+# versão CLI antiga (substituída pela web)
+sistema/
+
+# dados persistentes (gerados em runtime, não commitar)
+app/data/
+notas_output/
+*.log
+sistema_notas.log
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# certificados (nunca commitar)
+*.pfx
+*.p12
+*.pem
+*.key
+config.json
+config.key

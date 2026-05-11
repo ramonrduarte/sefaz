@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Certificado Digital — Portal NF-e / CT-e{% endblock %}
+
+{% block content %}
+<h4 class="mb-4 fw-semibold"><i class="bi bi-shield-lock me-2 text-primary"></i>Certificado Digital</h4>
+
+{% if msg_ok %}
+<div class="alert alert-success d-flex align-items-center gap-2">
+  <i class="bi bi-check-circle-fill"></i> {{ msg_ok }}
+</div>
+{% endif %}
+{% if msg_erro %}
+<div class="alert alert-danger d-flex align-items-center gap-2">
+  <i class="bi bi-x-circle-fill"></i> {{ msg_erro }}
+</div>
+{% endif %}
+
+<!-- Status atual -->
+<div class="card mb-4">
+  <div class="card-header fw-semibold">Certificado atual</div>
+  <div class="card-body">
+    {% if cert_status.status == 'nao_configurado' %}
+      <p class="text-muted mb-0"><i class="bi bi-dash-circle me-2"></i>Nenhum certificado configurado.</p>
+    {% else %}
+      <div class="d-flex align-items-start justify-content-between flex-wrap gap-2">
+        <div>
+          <p class="mb-1">
+            <span class="badge badge-{{ cert_status.status }} me-2">{{ cert_status.label }}</span>
+            <strong>{{ cert_status.info.nome }}</strong>
+          </p>
+          {% if cert_status.info.validade %}
+          <p class="mb-1 small text-muted">
+            <i class="bi bi-calendar3 me-1"></i>
+            Vigência: {{ cert_status.info.inicio }} até {{ cert_status.info.validade }}
+          </p>
+          {% endif %}
+          {% if cert_status.info.dias_restantes is defined %}
+            {% if cert_status.info.dias_restantes <= 30 %}
+            <p class="mb-0 small text-warning">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              Expira em <strong>{{ cert_status.info.dias_restantes }} dias</strong>. Renove o certificado.
+            </p>
+            {% elif cert_status.status == 'expirado' %}
+            <p class="mb-0 small text-danger">
+              <i class="bi bi-x-circle me-1"></i>Certificado expirado. Carregue um novo.
+            </p>
+            {% else %}
+            <p class="mb-0 small text-success">
+              <i class="bi bi-check-circle me-1"></i>{{ cert_status.info.dias_restantes }} dias restantes.
+            </p>
+            {% endif %}
+          {% endif %}
+        </div>
+        <form method="post" action="/certificado/remover"
+              onsubmit="return confirm('Remover o certificado configurado?')">
+          <button type="submit" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-trash me-1"></i>Remover
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Upload -->
+<div class="card">
+  <div class="card-header fw-semibold">
+    {% if cert_status.status == 'nao_configurado' %}Carregar certificado{% else %}Substituir certificado{% endif %}
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      Selecione o arquivo <strong>.pfx</strong> ou <strong>.p12</strong> do seu certificado A1
+      e informe a senha. O arquivo será armazenado de forma segura no volume do container.
+    </p>
+
+    <form method="post" action="/certificado" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label">Arquivo do certificado <span class="text-danger">*</span></label>
+        <input type="file" class="form-control" name="arquivo"
+               accept=".pfx,.p12" required id="inputArquivo">
+        <div class="form-text">Formatos aceitos: .pfx e .p12 (certificado A1)</div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Senha do certificado <span class="text-danger">*</span></label>
+        <div class="input-group" style="max-width:400px">
+          <input type="password" class="form-control" name="senha" id="inputSenha"
+                 placeholder="Senha do arquivo PFX" required autocomplete="off">
+          <button class="btn btn-outline-secondary" type="button" id="btnVerSenha"
+                  onclick="toggleSenha()">
+            <i class="bi bi-eye" id="iconeSenha"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-upload me-2"></i>Carregar e Validar
+      </button>
+    </form>
+
+    <div class="mt-3 p-3 bg-light rounded small text-muted">
+      <i class="bi bi-info-circle me-1"></i>
+      <strong>Segurança:</strong> A senha é criptografada antes de ser armazenada.
+      O arquivo do certificado fica no volume persistente do container e não é exposto externamente.
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleSenha() {
+  const inp = document.getElementById('inputSenha');
+  const ico = document.getElementById('iconeSenha');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.className = 'bi bi-eye-slash';
+  } else {
+    inp.type = 'password';
+    ico.className = 'bi bi-eye';
+  }
+}
+
+document.getElementById('inputArquivo').addEventListener('change', function() {
+  const nome = this.files[0]?.name || '';
+  const ext = nome.split('.').pop().toLowerCase();
+  if (ext && ext !== 'pfx' && ext !== 'p12') {
+    this.value = '';
+    alert('Selecione um arquivo com extensão .pfx ou .p12');
+  }
+});
+</script>
+{% endblock %}
