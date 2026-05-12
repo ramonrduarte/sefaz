@@ -47,8 +47,7 @@ async def dashboard(request: Request):
     config = config_manager.carregar()
     cert_status = _status_certificado(config)
     ok, erros = config_manager.esta_configurado(config)
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "config": config,
         "cert_status": cert_status,
         "configurado": ok,
@@ -60,8 +59,7 @@ async def dashboard(request: Request):
 @app.get("/configuracoes", response_class=HTMLResponse)
 async def pg_configuracoes(request: Request, ok: str = "", erro: str = ""):
     config = config_manager.carregar()
-    return templates.TemplateResponse("configuracoes.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "configuracoes.html", {
         "config": config,
         "msg_ok": ok,
         "msg_erro": erro,
@@ -103,8 +101,7 @@ async def salvar_configuracoes(
 async def pg_certificado(request: Request, ok: str = "", erro: str = ""):
     config = config_manager.carregar()
     cert_status = _status_certificado(config)
-    return templates.TemplateResponse("certificado.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "certificado.html", {
         "config": config,
         "cert_status": cert_status,
         "msg_ok": ok,
@@ -161,8 +158,7 @@ async def remover_certificado():
 async def pg_sincronizar(request: Request):
     config = config_manager.carregar()
     ok, erros = config_manager.esta_configurado(config)
-    return templates.TemplateResponse("sincronizar.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "sincronizar.html", {
         "configurado": ok,
         "erros_config": erros,
         "current": "sincronizar",
