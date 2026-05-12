@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 NS_CTE = "http://www.portalfiscal.inf.br/cte"
 NS_SOAP12 = "http://www.w3.org/2003/05/soap-envelope"
-NS_WSDL = "http://www.portalfiscal.inf.br/cte/wsdl/DistribuicaoDeDocumentos"
+NS_WSDL = "http://www.portalfiscal.inf.br/cte/wsdl/CTeIntegracao"
 
 TIMEOUT = 60
 

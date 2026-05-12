@@ -23,10 +23,10 @@ _CONFIG_PADRAO = {
         "cte": "0"
     },
     "endpoints": {
-        "nfe_producao": "https://www.sefaz.rs.gov.br/ws/NfeDistribuicaoDFe/NfeDistribuicaoDFeRSContabilista.asmx",
-        "nfe_homologacao": "https://www.sefaz.rs.gov.br/ws-hom/NfeDistribuicaoDFe/NfeDistribuicaoDFeRSContabilista.asmx",
-        "cte_producao": "https://www.sefaz.rs.gov.br/ws/CTeDistribuicaoDFe/CTeDistribuicaoDFeRSContabilista.asmx",
-        "cte_homologacao": "https://www.sefaz.rs.gov.br/ws-hom/CTeDistribuicaoDFe/CTeDistribuicaoDFeRSContabilista.asmx"
+        "nfe_producao": "https://nfe-rs-integracao.sefazvirtual.rs.gov.br/ws/NfeIntegracao/NfeIntegracao.asmx",
+        "nfe_homologacao": "https://nfe-rs-integracao-hmle.sefazvirtual.rs.gov.br/ws/NfeIntegracao/NfeIntegracao.asmx",
+        "cte_producao": "https://dfe-servico.svrs.rs.gov.br/ws/CTeIntegracao/CTeIntegracao.asmx",
+        "cte_homologacao": "https://dfe-servico-homologacao.svrs.rs.gov.br/ws/CTeIntegracao/CTeIntegracao.asmx"
     }
 }
 
