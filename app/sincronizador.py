@@ -7,8 +7,8 @@ from app.certificado import ContextoCertificado
 
 logger = logging.getLogger(__name__)
 
-CSTAT_COM_DOCS = "137"
-CSTAT_SEM_DOCS = "138"
+CSTAT_COM_DOCS = "118"
+CSTAT_SEM_DOCS = "117"
 
 
 @dataclass
