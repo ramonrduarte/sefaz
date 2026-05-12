@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import shutil
 from pathlib import Path
 from typing import Annotated
 
@@ -22,7 +21,7 @@ BASE_DIR = Path(__file__).parent
 
 app = FastAPI(title="Portal NF-e / CT-e")
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
-templates = Jinja2Templates(directory=BASE_DIR / "templates")
+templates = Jinja2Templates(directory=BASE_DIR / "templates", cache_size=0)
 
 
 def _status_certificado(config: dict) -> dict:
