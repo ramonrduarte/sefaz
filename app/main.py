@@ -21,7 +21,8 @@ BASE_DIR = Path(__file__).parent
 
 app = FastAPI(title="Portal NF-e / CT-e")
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
-templates = Jinja2Templates(directory=BASE_DIR / "templates", cache_size=0)
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+templates.env.cache = None  # workaround: Starlette+Jinja2 3.1.x TypeError com dict como cache key
 
 
 def _status_certificado(config: dict) -> dict:
